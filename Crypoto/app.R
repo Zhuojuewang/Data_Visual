@@ -11,32 +11,74 @@ library(shiny)
 library(tidyverse)
 library(shinydashboard)
 
+
+
+
+
+# sidebar def
+sidebar <- dashboardSidebar(
+  sidebarMenu(
+    menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
+    menuItem("Widgets", tabName = "widgets", icon = icon("th")),
+    menuItem("About", tabName = "About", icon = icon("pushpin",lib ="glyphicon"))
+  )
+)
+
+
+
+body <- dashboardBody(
+  tabItems(
+    tabItem(tabName = "dashboard",
+            fluidRow(
+              # A static valueBox
+              infoBox("New Orders", 10 * 2, icon = icon("credit-card"),fill =FALSE),
+              # Dynamic infoBoxes
+              infoBoxOutput("progressBox"),
+              infoBoxOutput("approvalBox")
+            ),
+            fluidRow(
+              infoBox("New Orders", 10 * 2, icon = icon("credit-card"), fill = TRUE),
+              infoBoxOutput("progressBox2"),
+              infoBoxOutput("approvalBox2")
+            )
+            
+    ),
+    tabItem(tabName = "widgets",
+            h2("Widgets tab content")
+    ),
+    # member table 
+    tabItem(tabName = "About",
+            box( title = h1("Members"),status = "warning",solidHeader = TRUE, width = 12,
+              box(
+                h3("Zhuojue Wang"), br(), "he is abcde", width = 12
+              ),
+              box(
+                h3("Xuanyu Chen"), br(), "he is abcde", width = 12
+              ),
+              box(
+                h3("Xin Kang"), br(), "he is abcde", width = 12
+              ),
+              box(
+                h3("Bowen Tan"), br(), "he is abcde", width = 12
+              ),
+              box(
+                h3("Yitong Fu"), br(), "he is abcde", width = 12
+              )
+            )
+    )
+  )
+)
+
+
+
 # Define UI for 
 ui <- dashboardPage(
-    dashboardHeader(title = "Cryptocurrency Dashboard"),
+    dashboardHeader(title = span(tagList(icon("bitcoin"),"Cryptocurrency Dashboard")),
+                    titleWidth = 350),
     #side bar menu
-    dashboardSidebar(
-        sidebarMenu(
-            menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
-            menuItem("Widgets", tabName = "widgets", icon = icon("th"))
-        )
-    ),
-    dashboardBody(
-        #basic price dashboard
-        fluidRow(
-            # A static valueBox
-            infoBox("New Orders", 10 * 2, icon = icon("credit-card"),fill =FALSE),
-            # Dynamic infoBoxes
-            infoBoxOutput("progressBox"),
-            infoBoxOutput("approvalBox")
-            ),
-        fluidRow(
-            infoBox("New Orders", 10 * 2, icon = icon("credit-card"), fill = TRUE),
-            infoBoxOutput("progressBox2"),
-            infoBoxOutput("approvalBox2")
-        ),
-        ),
-    skin = c("red")
+    sidebar,
+    body,
+    skin = c("red"),
 )
 
     

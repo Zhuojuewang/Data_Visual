@@ -10,7 +10,7 @@
 library(shiny)
 library(tidyverse)
 library(shinydashboard)
-
+library(coinmarketcapr)
 
 
 
@@ -18,6 +18,14 @@ library(shinydashboard)
 # sidebar def
 sidebar <- dashboardSidebar(
   sidebarMenu(
+    selectInput(inputId = "CryptoType",label = "Cryptocurrencies",
+                choices = c("Bitcoin"),
+                selected = "Bitcoin"
+    ),
+    selectInput(inputId = "Currency",label = "Currencies",
+                choices = c("USD"),
+                selected = "USD"
+    ),
     menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
     menuItem("Widgets", tabName = "widgets", icon = icon("th")),
     menuItem("About", tabName = "About", icon = icon("pushpin",lib ="glyphicon"))
@@ -83,7 +91,26 @@ ui <- dashboardPage(
 
     
 
-server <- function(input, output) {
+server <- function(input, output, session) {
+  
+  # connected to server
+  key ="33c270b5-e528-44fd-8443-0b4493f76019"
+  coinmarketcapr::setup(key)
+  
+  # fill the sidebar Input CryptoType
+  observeEvent(
+    input$CryptoType,
+    updateSelectInput(session, "CryptoType", label = "Cryptocurrency Name",
+                      choices = coinmarketcapr::get_crypto_listings() %>% select(name) %>% as.list() %>% unlist(use.names=FALSE),
+                      selected = input$CryptoType))
+  # fill the sidebar Input Currencies
+  observeEvent(
+    input$Currency,
+    updateSelectInput(session, "Currency", label = "Currency Name",
+                      choices = c(coinmarketcapr::get_valid_currencies()),
+                      selected = input$Currency))
+
+  
     output$progressBox <- renderInfoBox({
         infoBox(
             "Progress", paste0(25 + input$count, "%"), icon = icon("list"),

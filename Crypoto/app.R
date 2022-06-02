@@ -36,7 +36,7 @@ ui <- dashboardPage(
             infoBoxOutput("approvalBox2")
         ),
         ),
-    skin = c("black")
+    skin = c("red")
 )
 
     

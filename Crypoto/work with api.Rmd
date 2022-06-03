@@ -1,0 +1,44 @@
+---
+title: "Api Connect Test"
+author: "Zhuojue Wang"
+date: '2022-06-02'
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+library(devtools)
+library(httr)
+library(jsonlite)
+library(markdown)
+library(geckor)
+```
+```{r}
+library(coinmarketcapr)
+key ="33c270b5-e528-44fd-8443-0b4493f76019"
+
+coinmarketcapr::setup(key)
+```
+
+```{r}
+crypto_list <- c(get_crypto_listings() %>% select(name))
+crypto_list
+```
+```{r}
+latest_marketcap <- get_global_marketcap('USD')
+latest_marketcap
+```
+
+```{r}
+get_valid_currencies()
+```
+```{r}
+c <- coinmarketcapr::get_crypto_listings(currency="USD")  %>% filter(name == "Bitcoin") %>% select("USD_percent_change_24h") 
+c>0
+```
+
+
+```{r}
+get_marketcap_ticker_all(currency = "TWD") %>% filter(name == "Bitcoin") 
+```
+

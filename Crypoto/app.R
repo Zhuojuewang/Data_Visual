@@ -110,7 +110,7 @@ server <- function(input, output, session) {
   
   # get data for all Box
   dataInputBox <- reactive({
-    get_marketcap_ticker_all(currency = input$Currency) %>% filter(name == input$CryptoType) 
+    get_crypto_listings(currency = input$Currency) %>% filter(name == input$CryptoType) 
   })
   # Dashboard top box summary
   output$CurrencyNameBox <- renderInfoBox({

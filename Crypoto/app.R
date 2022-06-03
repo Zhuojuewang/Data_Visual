@@ -16,7 +16,7 @@ library(coinmarketcapr)
 # sidebar def
 sidebar <- dashboardSidebar(
   sidebarMenu(
-    selectInput(inputId = "CryptoType",label = "Cryptocurrencies",
+    selectInput(inputId = "CryptoType",label = " Cryptocurrencies",
                 choices = c("Bitcoin"),
                 selected = "Bitcoin"
     ),
@@ -25,7 +25,7 @@ sidebar <- dashboardSidebar(
                 selected = "USD"
     ),
     #side bar name and icon
-    menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
+    menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard",lib ="font-awesome")),
     menuItem("Widgets", tabName = "widgets", icon = icon("th")),
     menuItem("About", tabName = "About", icon = icon("pushpin",lib ="glyphicon"))
   )
@@ -39,13 +39,13 @@ body <- dashboardBody(
             fluidRow(
               # Dynamic infoBoxes
               infoBoxOutput("CurrencyNameBox"),
-              infoBoxOutput("progressBox"),
+              infoBoxOutput("PriceBox"),
               infoBoxOutput("approvalBox")
             ),
             fluidRow(
-              infoBox("New Orders", 10 * 2, icon = icon("credit-card"), fill = TRUE),
-              infoBoxOutput("progressBox2"),
-              infoBoxOutput("approvalBox2")
+              infoBoxOutput("TotalSupplyBox2"),
+              infoBoxOutput("MarketCapBox2"),
+              infoBoxOutput("VolumeBox2")
             )
             
     ),
@@ -114,41 +114,51 @@ server <- function(input, output, session) {
   })
   # Dashboard top box summary
   output$CurrencyNameBox <- renderInfoBox({
-    infoBox("Currency Name", h1(input$CryptoType), 
+    infoBox("Currency Name", h3(input$CryptoType), 
             icon = icon("btc"),
             color = "blue"
     )
   })
-  output$progressBox <- renderInfoBox({
-    infoBox("Price",  dataInputBox() %>% select(paste0(input$Currency,"_price")) %>% format(big.mark = ",", scientific = FALSE) %>% h1(), 
-            icon = icon("list"),
+  output$PriceBox <- renderInfoBox({
+    infoBox("Price",  dataInputBox() %>% select(paste0(input$Currency,"_price")) %>% format(big.mark = ",", scientific = FALSE) %>% h3(), 
+            icon = icon("usd",lib ="glyphicon"),
             color = "purple"
     )
   })
+  
+  #observe the change and change the icon direction accordingly
+  obs_percent_change_24h <- reactive({dataInputBox() %>% select(paste0(input$Currency,"_percent_change_24h"))})
+  
   output$approvalBox <- renderInfoBox({
-    infoBox("Total Supply", dataInputBox() %>% select(total_supply) %>% format(big.mark = ",", scientific = FALSE) %>% h1(),
-            icon = icon("bell"),
-            color = "yellow"
-    )
+    if(obs_percent_change_24h()>0){
+      infoBox("Percent Change(24HR)", paste0(dataInputBox() %>% select(paste0(input$Currency,"_percent_change_24h")) %>% format(big.mark = ",", scientific = FALSE),"%") %>% h3(),
+                             icon = icon("arrow-up"),
+                             color = "yellow")
+    } else{
+      infoBox("Percent Change(24HR)", paste0(dataInputBox() %>% select(paste0(input$Currency,"_percent_change_24h")) %>% format(big.mark = ",", scientific = FALSE),"%") %>% h3(),
+                              icon = icon("arrow-down"),
+                              color = "yellow")
+    }
   })
     
+    
   # Same as above, but with fill=TRUE
-  output$progressBox2 <- renderInfoBox({
-    infoBox(
-      "better", paste0(25 + input$count, "%"), icon = icon("list"),
-      color = "blue", fill = TRUE
+  output$TotalSupplyBox2 <- renderInfoBox({
+    infoBox("Total Supply", dataInputBox() %>% select(total_supply) %>% format(big.mark = ",", scientific = FALSE) %>% h3(),
+            icon = icon("piggy-bank"),
+            color = "blue", fill = TRUE
     )
   })
-  output$progressBox2 <- renderInfoBox({
-      infoBox(
-       "Progress", paste0(25 + input$count, "%"), icon = icon("list"),
-       color = "purple", fill = TRUE
+  output$MarketCapBox2 <- renderInfoBox({
+    infoBox( "Market Cap", dataInputBox() %>% select(paste0(input$Currency,"_market_cap")) %>% format(big.mark = ",", scientific = FALSE) %>% h3(),
+             icon = icon("tags", lib = "glyphicon"),
+             color = "purple", fill = TRUE
     )
   })
-  output$approvalBox2 <- renderInfoBox({
-      infoBox(
-        "Approval", "80%", icon = icon("thumbs-up", lib = "glyphicon"),
-        color = "yellow", fill = TRUE
+  output$VolumeBox2 <- renderInfoBox({
+      infoBox("Volume(24hr)",dataInputBox() %>% select(paste0(input$Currency,"_volume_24h")) %>% format(big.mark = ",", scientific = FALSE) %>% h3(),
+              icon = icon("list-alt", lib = "glyphicon"),
+              color = "yellow", fill = TRUE
     )
   })
 }

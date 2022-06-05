@@ -19,6 +19,26 @@ key ="33c270b5-e528-44fd-8443-0b4493f76019"
 
 coinmarketcapr::setup(key)
 ```
+
+
+```{r}
+get_crypto_listings()
+```
+```{r}
+library(treemap)
+
+market_today <- get_crypto_listings()
+
+df1 <- na.omit(market_today[,c('name','USD_market_cap')])
+df1$USD_market_cap <- as.numeric(df1$USD_market_cap)
+df1$formatted_market_cap <-  paste0(df1$name,'\n','$',format(df1$USD_market_cap,big.mark = ',',scientific = F, trim = T))
+
+df1
+treemap(df1, index = 'formatted_market_cap', vSize = 'USD_market_cap', title = 'Cryptocurrency Market Cap', fontsize.labels=c(12, 8), palette="RdYlBu")
+
+```
+
+
 ```{r}
 get_crypto_listings()
 ```

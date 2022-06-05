@@ -9,7 +9,24 @@ library(pins)
 library(tidyverse)
 library(httr)
 library(jsonlite)
+library(cryptowatchR)
 ```
+
+```{r}
+# Settings
+exchange <- "kraken"
+pair <- "btcusd"
+route <- "ohlc"
+api_key ='6NO31ET00O220TWYIMDR'
+
+# Daily prices for longest possible time period
+markets.btcusd <- get_markets(route, pair, exchange,api_key=api_key,allowance = TRUE)
+markets.btcusd$result$`180` %>% as_tibble()
+```
+```{r}
+get_pairs("btcusd")
+```
+
 
 ```{r}
 list_Supported_Currency <- c("AUD","CAD","CHF","EUR","GBP","JPY","USD")
@@ -47,13 +64,12 @@ case <- fromJSON(content(w, as = "text", encoding = "UTF-8"), flatten = TRUE)
 #   ClosePrice,
 #   Volume,
 #   QuoteVolume
-case
 ```
 
 
 ```{r}
 # select last 24 hr data with 3 mins inteval
-closeprice_24 <- case$result$`180` %>% as.tibble() %>% tail(480) %>%
+closeprice_24 <- case$result$`180` %>% as_tibble() %>% tail(480) %>%
   rename(CloseTime=V1,OpenPrice=V2,HighPrice=V3,LowPrice=V4,ClosePrice=V5,Volume=V6,QuoteVolume=V7) 
 closeprice_24
 ```
@@ -62,6 +78,10 @@ library(lubridate)
 closeprice_24$CloseTime <- closeprice_24$CloseTime %>% as_datetime() 
 closeprice_24
 ```
+```{r}
+closeprice_24 %>% tail(1) %>% select(CloseTime)
+```
+
 
 
 ```{r}

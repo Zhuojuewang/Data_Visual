@@ -11,9 +11,10 @@ library(tidyverse)
 library(ggthemes)
 # api package
 library(coinmarketcapr)
+library(cryptowatchR)
 # connect to API tool
 library(httr)
-library(jsonlite)
+#library(jsonlite)
 # work with Epoch time to UTC
 library(lubridate)
 
@@ -59,7 +60,9 @@ body <- dashboardBody(
     tabItem(tabName = "widgets",
             h2("Widgets tab content"),
             # top currecy
-            plotOutput("Top5MarketCap", click = "plot_click")
+            plotOutput("Top5MarketCap", click = "plot_click"),
+            plotOutput("TreeMarketCap", click = "plot_click")
+
     ),
     # member table 
     tabItem(tabName = "About",
@@ -88,7 +91,7 @@ body <- dashboardBody(
 
 # Define UI for 
 ui <- dashboardPage(
-    dashboardHeader(title = span(tagList(icon("bitcoin"),"Cryptocurrency Dashboard")),
+    dashboardHeader(title = span(tagList(icon("bitcoin")," Cryptocurrency Dashboard")),
                     titleWidth = 350),
     #side bar menu
     sidebar,
@@ -181,22 +184,37 @@ server <- function(input, output, session) {
       NULL
       }
   }
+  # get the three letter name of crytocurrcy
+  selected_symbol <- reactive({get_crypto_listings() %>% filter(name==input$CryptoType) %>% select(symbol)})
   # get data for the plot from crytowatch API
   crytowatch_data <- reactive({
-    validate(
-      not_supported_currency(input$Currency)
-    )
-    endpoint <- str_glue("https://api.cryptowat.ch/markets/kraken/{cryptocurrency}{currency}/ohlc",
-                         cryptocurrency = get_crypto_listings() %>% filter(name==input$CryptoType) %>% select(symbol) %>% tolower(),
-                         currency = tolower(input$Currency))
-    w <- GET(endpoint)
-    fromJSON(content(w, as = "text", encoding = "UTF-8"), flatten = TRUE) 
+    #validate(not_supported_currency(input$Currency))
+    
+    # endpoint <- str_glue("https://api.cryptowat.ch/markets/kraken/{cryptocurrency}{currency}/ohlc",
+    #                      cryptocurrency = "btc",
+    #                      currency = "usd")
+                         
+                         # cryptocurrency = get_crypto_listings() %>% filter(name==input$CryptoType) %>% select(symbol) %>% tolower(),
+                         # currency = tolower(input$Currency))
+    # endpoint <-("https://api.cryptowat.ch/pairs")
+    # w <- GET(endpoint)
+    # fromJSON(content(w, as = "text", encoding = "UTF-8"), flatten = TRUE)
+    
+    # Settings
+    exchange <- "kraken"
+    pair <- paste0(selected_symbol() %>% tolower(),tolower(input$Currency))
+    route <- "ohlc"
+    api_key ='6NO31ET00O220TWYIMDR'
+    
+    # Daily prices for longest possible time period
+    get_markets(route, pair, exchange,api_key=api_key,allowance = TRUE)
+    
   })
 
   
   output$LinePlot_24hr <- renderPlot({
     # select last 24 hr data with 3 mins inteval
-    closeprice_24 <- crytowatch_data()$result$`180` %>% as.tibble() %>% tail(480) %>%
+    closeprice_24 <- crytowatch_data()$result$`180` %>% as_tibble() %>% tail(480) %>%
       rename(CloseTime=V1,OpenPrice=V2,HighPrice=V3,LowPrice=V4,ClosePrice=V5,Volume=V6,QuoteVolume=V7)
     
     closeprice_24$CloseTime <- closeprice_24$CloseTime %>% as_datetime()
@@ -208,22 +226,9 @@ server <- function(input, output, session) {
            aes(x = CloseTime, y = ClosePrice)) + 
       xlab('Date Time (UTC)') +
       ylab('Price') +
-      ggtitle(paste('Price Change Over Last 24 Hours -', "BTC"),
-              subtitle = paste('Most recent data collected on:', 'BTC','(UTC)')) +
+      ggtitle(paste('Price Change Over Last 24 Hours -', selected_symbol()),
+              subtitle = paste('Most recent data collected on:', closeprice_24$CloseTime %>% tail(1) ,'(UTC)')) +
       geom_line() + stat_smooth(formula = y ~ x, method = "loess") + theme_economist()
-    
-    # if(input$Currency != "USD") {            
-    #   return("Some error message")          
-    # } else {            
-    #   ggplot(data = closeprice_24, 
-    #          aes(x = CloseTime, y = ClosePrice)) + 
-    #     xlab('Date Time (UTC)') +
-    #     ylab('Price') +
-    #     ggtitle(paste('Price Change Over Last 24 Hours -', "BTC"),
-    #             subtitle = paste('Most recent data collected on:', 'BTC','(UTC)')) +
-    #     geom_line() + stat_smooth() + theme_economist()            
-    # }
-    
   })
   
   
@@ -232,6 +237,18 @@ server <- function(input, output, session) {
   output$Top5MarketCap <- renderPlot({
     plot_top_currencies(input$Currency)+theme_economist()
   }, res = 96)
+  
+  output$TreeMarketCap <- renderPlot({
+    market_today <- get_crypto_listings()
+    
+    df1 <- na.omit(market_today[,c('name','USD_market_cap')])
+    df1$USD_market_cap <- as.numeric(df1$USD_market_cap)
+    df1$formatted_market_cap <-  paste0(df1$name,'\n','$',format(df1$USD_market_cap,big.mark = ',',scientific = F, trim = T))
+    # plot the market share of coins
+    treemap::treemap(df1, index = 'formatted_market_cap', vSize = 'USD_market_cap', title = 'Cryptocurrency Market Cap', fontsize.labels=c(12, 8), palette="RdYlBu")
+    
+  }, res = 96)
+  
   
 }
 

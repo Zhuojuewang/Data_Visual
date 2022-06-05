@@ -1,16 +1,21 @@
 #
 # This is a Shiny web application. You can run the application by clicking
-# the 'Run App' button above.
-#
-# Find out more about building applications with Shiny here:
-#
-#    http://shiny.rstudio.com/
-#
+# We work with two public api due to limited credits for each api
+# API: CoinMarketCap
+# API: HitBTC
 
 library(shiny)
-library(tidyverse)
 library(shinydashboard)
+# data manipulation and plot
+library(tidyverse)
+library(ggthemes)
+# api package
 library(coinmarketcapr)
+# connect to API tool
+library(httr)
+library(jsonlite)
+# work with Epoch time to UTC
+library(lubridate)
 
 
 # sidebar def
@@ -46,11 +51,15 @@ body <- dashboardBody(
               infoBoxOutput("TotalSupplyBox2"),
               infoBoxOutput("MarketCapBox2"),
               infoBoxOutput("VolumeBox2")
-            )
+            ),
+            # 24 hr plot of currency change
+            plotOutput("LinePlot_24hr", click = "plot_click")
             
     ),
     tabItem(tabName = "widgets",
-            h2("Widgets tab content")
+            h2("Widgets tab content"),
+            # top currecy
+            plotOutput("Top5MarketCap", click = "plot_click")
     ),
     # member table 
     tabItem(tabName = "About",
@@ -142,7 +151,7 @@ server <- function(input, output, session) {
   })
     
     
-  # Same as above, but with fill=TRUE
+  # Second line of Box but with fill=TRUE
   output$TotalSupplyBox2 <- renderInfoBox({
     infoBox("Total Supply", dataInputBox() %>% select(total_supply) %>% format(big.mark = ",", scientific = FALSE) %>% h3(),
             icon = icon("piggy-bank"),
@@ -161,6 +170,69 @@ server <- function(input, output, session) {
               color = "yellow", fill = TRUE
     )
   })
+  
+  #Because the two api doesn't support the same currency, we have to eliminated the issues
+  # validate function
+  not_supported_currency <- function(input) {
+    list_Supported_Currency <- c("AUD","CAD","CHF","EUR","GBP","JPY","USD")
+    if (!(input %in% list_Supported_Currency)) {
+      "The choosen Currency is not support for the graph, Please choose another Currency."
+    } else {
+      NULL
+      }
+  }
+  # get data for the plot from crytowatch API
+  crytowatch_data <- reactive({
+    validate(
+      not_supported_currency(input$Currency)
+    )
+    endpoint <- str_glue("https://api.cryptowat.ch/markets/kraken/{cryptocurrency}{currency}/ohlc",
+                         cryptocurrency = get_crypto_listings() %>% filter(name==input$CryptoType) %>% select(symbol) %>% tolower(),
+                         currency = tolower(input$Currency))
+    w <- GET(endpoint)
+    fromJSON(content(w, as = "text", encoding = "UTF-8"), flatten = TRUE) 
+  })
+
+  
+  output$LinePlot_24hr <- renderPlot({
+    # select last 24 hr data with 3 mins inteval
+    closeprice_24 <- crytowatch_data()$result$`180` %>% as.tibble() %>% tail(480) %>%
+      rename(CloseTime=V1,OpenPrice=V2,HighPrice=V3,LowPrice=V4,ClosePrice=V5,Volume=V6,QuoteVolume=V7)
+    
+    closeprice_24$CloseTime <- closeprice_24$CloseTime %>% as_datetime()
+    
+    #need to change the date in english form since my computer is in Chinese :(
+    Sys.setlocale("LC_TIME", "C")
+    
+    ggplot(data = closeprice_24, 
+           aes(x = CloseTime, y = ClosePrice)) + 
+      xlab('Date Time (UTC)') +
+      ylab('Price') +
+      ggtitle(paste('Price Change Over Last 24 Hours -', "BTC"),
+              subtitle = paste('Most recent data collected on:', 'BTC','(UTC)')) +
+      geom_line() + stat_smooth(formula = y ~ x, method = "loess") + theme_economist()
+    
+    # if(input$Currency != "USD") {            
+    #   return("Some error message")          
+    # } else {            
+    #   ggplot(data = closeprice_24, 
+    #          aes(x = CloseTime, y = ClosePrice)) + 
+    #     xlab('Date Time (UTC)') +
+    #     ylab('Price') +
+    #     ggtitle(paste('Price Change Over Last 24 Hours -', "BTC"),
+    #             subtitle = paste('Most recent data collected on:', 'BTC','(UTC)')) +
+    #     geom_line() + stat_smooth() + theme_economist()            
+    # }
+    
+  })
+  
+  
+  
+  # second page
+  output$Top5MarketCap <- renderPlot({
+    plot_top_currencies(input$Currency)+theme_economist()
+  }, res = 96)
+  
 }
 
 

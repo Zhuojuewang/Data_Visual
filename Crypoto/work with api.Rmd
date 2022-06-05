@@ -19,6 +19,14 @@ key ="33c270b5-e528-44fd-8443-0b4493f76019"
 
 coinmarketcapr::setup(key)
 ```
+```{r}
+get_crypto_listings()
+```
+
+
+```{r}
+get_crypto_listings() %>% filter(name=="Bitcoin") %>% select(symbol) %>% tolower()
+```
 
 ```{r}
 crypto_list <- c(get_crypto_listings() %>% select(name))
@@ -30,8 +38,12 @@ latest_marketcap
 ```
 
 ```{r}
-get_valid_currencies()
+plot_top_currencies("USD")+theme_economist()
 ```
+```{r}
+get_crypto_quotes(latest=FALSE)
+```
+
 ```{r}
 c <- coinmarketcapr::get_crypto_listings(currency="USD")  %>% filter(name == "Bitcoin") %>% select("USD_percent_change_24h") 
 c>0

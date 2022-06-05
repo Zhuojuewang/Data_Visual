@@ -1,0 +1,80 @@
+---
+title: "HitBTC"
+author: "Zhuojue Wang"
+date: '2022-06-03'
+output: html_document
+---
+```{r}
+library(pins)
+library(tidyverse)
+library(httr)
+library(jsonlite)
+```
+
+```{r}
+list_Supported_Currency <- c("AUD","CAD","CHF","EUR","GBP","JPY","USD")
+
+x <- "USD"
+x %in% list_Supported_Currency
+```
+
+
+```{r}
+case <- fromJSON(content(GET("https://api.cryptowat.ch/pairs"), as = "text", encoding = "UTF-8"), flatten = TRUE)
+case
+```
+
+
+
+
+```{r}
+# all asset
+case <- fromJSON(content(GET("https://api.cryptowat.ch/assets"), as = "text", encoding = "UTF-8"), flatten = TRUE)
+case
+```
+
+```{r}
+endpoint <- str_glue("https://api.cryptowat.ch/markets/kraken/{cryptocurrency}{currency}/ohlc",
+                     cryptocurrency = "btc",
+                     currency = "usd")
+w <- GET(endpoint)
+case <- fromJSON(content(w, as = "text", encoding = "UTF-8"), flatten = TRUE)
+#7 day 
+# CloseTime,
+#   OpenPrice,
+#   HighPrice,
+#   LowPrice,
+#   ClosePrice,
+#   Volume,
+#   QuoteVolume
+case
+```
+
+
+```{r}
+# select last 24 hr data with 3 mins inteval
+closeprice_24 <- case$result$`180` %>% as.tibble() %>% tail(480) %>%
+  rename(CloseTime=V1,OpenPrice=V2,HighPrice=V3,LowPrice=V4,ClosePrice=V5,Volume=V6,QuoteVolume=V7) 
+closeprice_24
+```
+```{r}
+library(lubridate)
+closeprice_24$CloseTime <- closeprice_24$CloseTime %>% as_datetime() 
+closeprice_24
+```
+
+
+```{r}
+#need to change the date in english form since my computer is in Chinese :(
+Sys.setlocale("LC_TIME", "C")
+
+ggplot(data = closeprice_24, 
+       aes(x = CloseTime, y = ClosePrice)) + 
+       xlab('Date Time (UTC)') +
+       ylab('Price') +
+       ggtitle(paste('Price Change Over Last 24 Hours -', "BTC"),
+                          subtitle = paste('Most recent data collected on:', 'BTC','(UTC)')) +
+       geom_line() + stat_smooth() + theme_economist()
+```
+
+

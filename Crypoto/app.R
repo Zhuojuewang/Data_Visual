@@ -66,9 +66,15 @@ body <- dashboardBody(
     ),
     # member table 
     tabItem(tabName = "About",
-            box( title = h1("Members"),status = "warning",solidHeader = TRUE, width = 12,
-              box(
-                h3("Zhuojue Wang"), br(), "he is abcde", width = 12
+            box( title = h1("Members"),status = "warning",solidHeader = TRUE, width = 12,collapsible = TRUE,
+              box(width = 12,
+                fluidRow(column(width = 2, align = "center" ,img(src = "ZhuojueWang.jpg", height = 150, width = 100)),
+                         column(width = 10, 
+                                h3("Zhuojue Wang"),
+                                p("Zhuojue is a Master of Business Analytics Risk Management Candidate at Johns Hopkins Carey Business School. He received his bachelor degree from UC Davis with a double major in Statistics and Economics. He is passionate in machine learning applications in business analytics with causal analysis and on his way to become a researcher in the field.") 
+                          )
+                
+                )
               ),
               box(
                 h3("Xuanyu Chen"), br(), "he is abcde", width = 12
@@ -96,7 +102,7 @@ ui <- dashboardPage(
     #side bar menu
     sidebar,
     body,
-    skin = c("red"),
+    skin = c("red")
 )
 
     
@@ -247,9 +253,10 @@ server <- function(input, output, session) {
     # plot the market share of coins
     treemap::treemap(df1, index = 'formatted_market_cap', vSize = 'USD_market_cap', title = 'Cryptocurrency Market Cap', fontsize.labels=c(12, 8), palette="RdYlBu")
     
-  }, res = 96)
+  }, res = 96,width = "auto",height = "auto")
   
-  
+  # last page
+
 }
 
 

@@ -79,7 +79,7 @@ closeprice_24$CloseTime <- closeprice_24$CloseTime %>% as_datetime()
 closeprice_24
 ```
 ```{r}
-closeprice_24 %>% tail(1) %>% select(CloseTime)
+closeprice_24 %>% select(ClosePrice) %>% summary()
 ```
 
 

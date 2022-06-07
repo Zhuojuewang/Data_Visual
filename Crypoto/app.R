@@ -6,9 +6,11 @@
 
 library(shiny)
 library(shinydashboard)
+library(shinydashboardPlus)
 # data manipulation and plot
 library(tidyverse)
 library(ggthemes)
+library(ggforce)
 # api package
 library(coinmarketcapr)
 library(cryptowatchR)
@@ -64,32 +66,102 @@ body <- dashboardBody(
             plotOutput("TreeMarketCap", click = "plot_click")
 
     ),
-    # member table 
+    # member table
     tabItem(tabName = "About",
-            box( title = h1("Members"),status = "warning",solidHeader = TRUE, width = 12,collapsible = TRUE,
-              box(width = 12,
-                fluidRow(column(width = 2, align = "center" ,img(src = "ZhuojueWang.jpg", height = 150, width = 100)),
-                         column(width = 10, 
-                                h3("Zhuojue Wang"),
-                                p("Zhuojue is a Master of Business Analytics Risk Management Candidate at Johns Hopkins Carey Business School. He received his bachelor degree from UC Davis with a double major in Statistics and Economics. He is passionate in machine learning applications in business analytics with causal analysis and on his way to become a researcher in the field.") 
-                          )
-                
-                )
-              ),
-              box(
-                h3("Xuanyu Chen"), br(), "he is abcde", width = 12
-              ),
-              box(
-                h3("Xin Kang"), br(), "he is abcde", width = 12
-              ),
-              box(
-                h3("Bowen Tan"), br(), "he is abcde", width = 12
-              ),
-              box(
-                h3("Yitong Fu"), br(), "he is abcde", width = 12
-              )
-            )
+      fluidRow(
+        column(width = 6,
+          h2("Team Members")
+          )
+      ),
+      fluidRow(
+        userBox(
+          title = userDescription(
+            title = "Zhuojue Wang",
+            subtitle = "lead Developer",
+            type = 2,
+            image = "https://media-exp2.licdn.com/dms/image/C5603AQEKOqUz_wc8ag/profile-displayphoto-shrink_800_800/0/1541652423442?e=1660176000&v=beta&t=7GV52KgatnGfBTuBLSIFu_sqobhWZokAW4OqTJ7SRMg",
+            backgroundImage = "https://love2dev.com/img/html-space-640x426.jpg"
+          ),
+          #status = "maroon",
+          p("Zhuojue is a Master of Business Analytics Risk Management Candidate at Johns Hopkins Carey Business School. He received his bachelor degree from UC Davis with a double major in Statistics and Economics. He is passionate in machine learning applications in business analytics with causal analysis and on his way to become a researcher in the field.")
+        ),
+        userBox(
+          title = userDescription(
+            title = "Xuanyu Chen",
+            subtitle = "lead Developer",
+            type = 2,
+            image = "https://media-exp2.licdn.com/dms/image/C5603AQGoVZTASX00hA/profile-displayphoto-shrink_400_400/0/1654536542969?e=1660176000&v=beta&t=hnYpWoYtwOxflCnPS5sVqzXhZfXJXVMbOUzf4GeNMTg",
+            backgroundImage = "https://www.freecodecamp.org/news/content/images/size/w2000/2021/06/w-qjCHPZbeXCQ-unsplash.jpg"
+          ),
+          #status = "warning",
+          p("Xuanyu Chen is currently a student in Business Analytics and Risk Management major at Johns Hopkins University. She graduated from Northeastern University with Finance major. She has experience in private equity, project management, and business strategy. ")
+        )
+      ),
+      fluidRow(
+        userBox(
+          title = userDescription(
+            title = "Xin Kang",
+            subtitle = "lead Developer",
+            type = 2,
+            image = "https://media-exp2.licdn.com/dms/image/C4E03AQHqkeN8PT-W0g/profile-displayphoto-shrink_400_400/0/1627371502253?e=1660176000&v=beta&t=w9-TpI7oZVcZfucwW5QRSv9xAu_yoETz0aQabgyy7RE",
+            backgroundImage = "https://www.freecodecamp.org/news/content/images/size/w2000/2021/06/w-qjCHPZbeXCQ-unsplash.jpg"
+          ),
+          #status = "warning",
+          p("Xuanyu Chen is currently a student in Business Analytics and Risk Management major at Johns Hopkins University. She graduated from Northeastern University with Finance major. She has experience in private equity, project management, and business strategy. ")
+        ),
+        userBox(
+          title = userDescription(
+            title = "Bowen Tan",
+            subtitle = "lead Developer",
+            type = 2,
+            image = "https://media-exp2.licdn.com/dms/image/C5603AQF1J_c3-GzCZQ/profile-displayphoto-shrink_400_400/0/1609620802392?e=1660176000&v=beta&t=daJtmVYNWtUuECVCXs3WApYx2gRzJaezvER44NlatjI",
+            backgroundImage = "https://www.freecodecamp.org/news/content/images/size/w2000/2021/06/w-qjCHPZbeXCQ-unsplash.jpg"
+          ),
+          #status = "warning",
+          p("Xuanyu Chen is currently a student in Business Analytics and Risk Management major at Johns Hopkins University. She graduated from Northeastern University with Finance major. She has experience in private equity, project management, and business strategy. ")
+        )
+      ),
+      fluidRow(
+        userBox(
+          title = userDescription(
+            title = "Yitong Fu",
+            subtitle = "lead Developer",
+            type = 2,
+            image = "https://media-exp2.licdn.com/dms/image/C4E03AQE_TGsVDLzI4Q/profile-displayphoto-shrink_400_400/0/1638992793893?e=1660176000&v=beta&t=qXG--KYg68dze5QG8FR-Oqky20CqG3R3VZiyYuPuLeY",
+            backgroundImage = "https://www.freecodecamp.org/news/content/images/size/w2000/2021/06/w-qjCHPZbeXCQ-unsplash.jpg"
+          ),
+          #status = "warning",
+          p("Xuanyu Chen is currently a student in Business Analytics and Risk Management major at Johns Hopkins University. She graduated from Northeastern University with Finance major. She has experience in private equity, project management, and business strategy. ")
+        )
+      )
     )
+    
+    
+    # tabItem(tabName = "About",
+    #         box( title = h1("Members"),status = "warning",solidHeader = TRUE, width = 12,collapsible = TRUE,
+    #           box(width = 12,
+    #             fluidRow(column(width = 2, align = "center" ,img(src = "ZhuojueWang.jpg", height = 150, width = 100)),
+    #                      column(width = 10, 
+    #                             h3("Zhuojue Wang"),
+    #                             p("Zhuojue is a Master of Business Analytics Risk Management Candidate at Johns Hopkins Carey Business School. He received his bachelor degree from UC Davis with a double major in Statistics and Economics. He is passionate in machine learning applications in business analytics with causal analysis and on his way to become a researcher in the field.") 
+    #                       )
+    #             
+    #             )
+    #           ),
+    #           box(
+    #             h3("Xuanyu Chen"), br(), "he is abcde", width = 12
+    #           ),
+    #           box(
+    #             h3("Xin Kang"), br(), "he is abcde", width = 12
+    #           ),
+    #           box(
+    #             h3("Bowen Tan"), br(), "he is abcde", width = 12
+    #           ),
+    #           box(
+    #             h3("Yitong Fu"), br(), "he is abcde", width = 12
+    #           )
+    #         )
+    # )
   )
 )
 
@@ -234,7 +306,15 @@ server <- function(input, output, session) {
       ylab('Price') +
       ggtitle(paste('Price Change Over Last 24 Hours -', selected_symbol()),
               subtitle = paste('Most recent data collected on:', closeprice_24$CloseTime %>% tail(1) ,'(UTC)')) +
-      geom_line() + stat_smooth(formula = y ~ x, method = "loess") + theme_economist()
+      geom_line() + stat_smooth(formula = y ~ x, method = "loess") + theme_economist()+
+      # labal max price
+      geom_mark_ellipse(aes(filter = ClosePrice == max(ClosePrice),
+                            label = CloseTime,
+                            description = paste0('Price spike to $', ClosePrice))) +
+      # Now the same to circle the minimum price:
+      geom_mark_ellipse(aes(filter = ClosePrice == min(ClosePrice),
+                            label = CloseTime,
+                            description = paste0('Price drop to $', ClosePrice)))
   })
   
   

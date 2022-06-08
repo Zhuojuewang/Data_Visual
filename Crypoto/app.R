@@ -44,6 +44,8 @@ sidebar <- dashboardSidebar(
 body <- dashboardBody(
   tabItems(
     tabItem(tabName = "dashboard",
+            h2(strong("Cryptocurrency Dashborad"),align = "center"),
+            br(),
             fluidRow(
               # Dynamic infoBoxes
               infoBoxOutput("CurrencyNameBox"),
@@ -56,7 +58,15 @@ body <- dashboardBody(
               infoBoxOutput("VolumeBox2")
             ),
             # 24 hr plot of currency change
-            plotOutput("LinePlot_24hr", click = "plot_click")
+            plotOutput("LinePlot_24hr", click = "plot_click"),
+            
+            # main content
+            h2("Introduction"),
+            h2("Research Questions"),
+            p("Some Question"),
+            h2("Data Source"),
+            p("We work with data from two different API, CoinMarketCap and Cryptowatch."),
+            
             
     ),
     tabItem(tabName = "widgets",
@@ -185,11 +195,15 @@ server <- function(input, output, session) {
   key ="33c270b5-e528-44fd-8443-0b4493f76019"
   coinmarketcapr::setup(key)
   
+  # list of not supported crypto
+  list_Supported_Cryptocurrency <- c("BNB","Binance USD","UNUS SED LEO","Cronos","NEAR Protocol","FTX Token","VeChain","Hedera","KuCoin Token","Elrond","TrueUSD",
+                                     "Theta Network","Helium","Huobi Token","Klaytn","eCash","BitTorrent-New","IOTA","Pax Dollar","Neo","Neutrino USD","PancakeSwap",
+                                     "Stacks","USDD","Nexo","OKB","Zilliqa","Celo","Decred","Harmony","Amp","Arweave","NEM","XDC Network","Holo","Gate Token","Fei USD","Bitcoin Gold","Kadena")
   # fill the sidebar Input CryptoType
   observeEvent(
     input$CryptoType,
     updateSelectInput(session, "CryptoType", label = "Cryptocurrency Name",
-                      choices = coinmarketcapr::get_crypto_listings() %>% select(name) %>% as.list() %>% unlist(use.names=FALSE),
+                      choices = coinmarketcapr::get_crypto_listings() %>% filter(!name %in% list_Supported_Cryptocurrency) %>% select(name) %>% as.list() %>% unlist(use.names=FALSE),
                       selected = input$CryptoType))
   # fill the sidebar Input Currencies
   observeEvent(
@@ -252,6 +266,7 @@ server <- function(input, output, session) {
     )
   })
   
+  
   #Because the two api doesn't support the same currency, we have to eliminated the issues
   # validate function
   not_supported_currency <- function(input) {
@@ -262,11 +277,15 @@ server <- function(input, output, session) {
       NULL
       }
   }
+
+  
+  
   # get the three letter name of crytocurrcy
   selected_symbol <- reactive({get_crypto_listings() %>% filter(name==input$CryptoType) %>% select(symbol)})
   # get data for the plot from crytowatch API
   crytowatch_data <- reactive({
-    #validate(not_supported_currency(input$Currency))
+    validate(not_supported_currency(input$Currency))
+    
     
     # endpoint <- str_glue("https://api.cryptowat.ch/markets/kraken/{cryptocurrency}{currency}/ohlc",
     #                      cryptocurrency = "btc",
@@ -310,11 +329,11 @@ server <- function(input, output, session) {
       # labal max price
       geom_mark_ellipse(aes(filter = ClosePrice == max(ClosePrice),
                             label = CloseTime,
-                            description = paste0('Price spike to $', ClosePrice))) +
+                            description = paste0('Price spike to $', ClosePrice)),con.colour = "red") +
       # Now the same to circle the minimum price:
       geom_mark_ellipse(aes(filter = ClosePrice == min(ClosePrice),
                             label = CloseTime,
-                            description = paste0('Price drop to $', ClosePrice)))
+                            description = paste0('Price drop to $', ClosePrice)),con.colour = "red")
   })
   
   

@@ -22,10 +22,21 @@ coinmarketcapr::setup(key)
 
 
 ```{r}
-get_crypto_listings()
+coinmarketcapr::get_crypto_listings() %>% select(name) %>% as.list() %>% unlist(use.names=FALSE)
+class(x)
 ```
 ```{r}
+list_Supported_Cryptocurrency <- c("BNB","Binance USD","UNUS SED LEO","Cronos","NEAR Protocol","FTX Token","VeChain","Hedera","KuCoin Token","Elrond","TrueUSD","Theta Network","Helium","Huobi Token","Klaytn","eCash","BitTorrent-New","IOTA","Pax Dollar","Neo","Neutrino USD","PancakeSwap","Stacks","USDD","Nexo","OKB","Zilliqa","Celo","Decred","Harmony","Amp","Arweave","NEM","XDC Network","Holo","Gate Token","Fei USD","Bitcoin Gold","Kadena")
+
+# my_list[names(my_list) %in% c("b", "c") == FALSE]
+# filter(!team %in% c('A', 'B'))
+
+coinmarketcapr::get_crypto_listings() %>% filter(!name %in% list_Supported_Cryptocurrency) %>% select(name) 
+```
+
+```{r}
 library(treemap)
+
 
 market_today <- get_crypto_listings()
 

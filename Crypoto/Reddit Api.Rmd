@@ -1,0 +1,21 @@
+---
+title: "Reddit Api"
+author: "Zhuojue Wang"
+date: '2022-06-09'
+output: html_document
+---
+
+
+```{r}
+library(tidyverse)
+library(RedditExctractoR)
+```
+```{r}
+example_urls = find_thread_urls(subreddit="cats", sort_by="top") %>% tibble()
+example_urls
+```
+```{r}
+example_urls %>% select(text) %>% head()
+```
+
+

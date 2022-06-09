@@ -19,6 +19,48 @@ library(httr)
 #library(jsonlite)
 # work with Epoch time to UTC
 library(lubridate)
+#for word cloud
+library(tm)
+library(wordcloud)
+library(memoise)
+
+
+
+
+
+# Word Cloud function
+
+# The list of valid books
+books <<- list("A Mid Summer Night's Dream" = "summer",
+               "The Merchant of Venice" = "merchant",
+               "Romeo and Juliet" = "romeo")
+
+# Using "memoise" to automatically cache the results
+getTermMatrix <- memoise(function(book) {
+  # Careful not to let just any name slip in here; a
+  # malicious user could manipulate this value.
+  if (!(book %in% books))
+    stop("Unknown book")
+  
+  text <- readLines(sprintf("C:/Users/zhuoj/OneDrive/文档/Data_Visual/Crypoto/WWW/%s.txt.gz", book),
+                    encoding="UTF-8")
+  
+  myCorpus = Corpus(VectorSource(text))
+  myCorpus = tm_map(myCorpus, content_transformer(tolower))
+  myCorpus = tm_map(myCorpus, removePunctuation)
+  myCorpus = tm_map(myCorpus, removeNumbers)
+  myCorpus = tm_map(myCorpus, removeWords,
+                    c(stopwords("SMART"), "thy", "thou", "thee", "the", "and", "but"))
+  
+  myDTM = TermDocumentMatrix(myCorpus,
+                             control = list(minWordLength = 1))
+  
+  m = as.matrix(myDTM)
+  
+  sort(rowSums(m), decreasing = TRUE)
+})
+
+
 
 
 # sidebar def
@@ -35,6 +77,7 @@ sidebar <- dashboardSidebar(
     #side bar name and icon
     menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard",lib ="font-awesome")),
     menuItem("Widgets", tabName = "widgets", icon = icon("th")),
+    menuItem("Community", tabName = "Community", icon = icon("comment")),
     menuItem("About", tabName = "About", icon = icon("pushpin",lib ="glyphicon"))
   )
 )
@@ -75,6 +118,33 @@ body <- dashboardBody(
             plotOutput("Top5MarketCap", click = "plot_click"),
             plotOutput("TreeMarketCap", click = "plot_click")
 
+    ),
+    tabItem(tabName = "Community",
+            fluidPage(
+              # Application title
+              titlePanel("Word Cloud"),
+              
+              sidebarLayout(
+                # Sidebar with a slider and selection inputs
+                sidebarPanel(
+                  selectInput("selection", "Choose a book:",
+                              choices = books),
+                  actionButton("update", "Change"),
+                  hr(),
+                  sliderInput("freq",
+                              "Minimum Frequency:",
+                              min = 1,  max = 50, value = 15),
+                  sliderInput("max",
+                              "Maximum Number of Words:",
+                              min = 1,  max = 300,  value = 100)
+                ),
+                
+                # Show Word Cloud
+                mainPanel(
+                  plotOutput("wordcloudplot")
+                )
+              )
+            )
     ),
     # member table
     tabItem(tabName = "About",
@@ -336,8 +406,6 @@ server <- function(input, output, session) {
                             description = paste0('Price drop to $', ClosePrice)),con.colour = "red")
   })
   
-  
-  
   # second page
   output$Top5MarketCap <- renderPlot({
     plot_top_currencies(input$Currency)+theme_economist()
@@ -353,6 +421,31 @@ server <- function(input, output, session) {
     treemap::treemap(df1, index = 'formatted_market_cap', vSize = 'USD_market_cap', title = 'Cryptocurrency Market Cap', fontsize.labels=c(12, 8), palette="RdYlBu")
     
   }, res = 96,width = "auto",height = "auto")
+  
+  
+  
+  # community page
+  terms <- reactive({
+    # Change when the "update" button is pressed...
+    input$update
+    # ...but not for anything else
+    isolate({
+      withProgress({
+        setProgress(message = "Processing corpus...")
+        getTermMatrix(input$selection)
+      })
+    })
+  })
+  
+  # Make the wordcloud drawing predictable during a session
+  wordcloud_rep <- repeatable(wordcloud)
+  
+  output$wordcloudplot <- renderPlot({
+    v <- terms()
+    wordcloud_rep(names(v), v, scale=c(4,0.5),
+                  min.freq = input$freq, max.words=input$max,
+                  colors=brewer.pal(8, "Dark2"))
+  })
   
   # last page
 

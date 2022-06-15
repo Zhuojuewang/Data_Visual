@@ -23,6 +23,7 @@ library(lubridate)
 library(tm)
 library(wordcloud)
 library(memoise)
+library(reshape2)
 
 
 
@@ -31,33 +32,34 @@ library(memoise)
 # Word Cloud function
 
 # The list of valid books
-books <<- list("A Mid Summer Night's Dream" = "summer",
-               "The Merchant of Venice" = "merchant",
-               "Romeo and Juliet" = "romeo")
+subreddits <<- list("BITCOINBEGINNERS", "CRYPTOCURRENCIES", "CRYPTOMARKETS")
 
 # Using "memoise" to automatically cache the results
-getTermMatrix <- memoise(function(book) {
+getTermMatrix <- memoise(function(subreddit) {
   # Careful not to let just any name slip in here; a
   # malicious user could manipulate this value.
-  if (!(book %in% books))
-    stop("Unknown book")
+  if (!(subreddit %in% subreddits))
+     stop("Unknown subreddit")
   
-  text <- readLines(sprintf("C:/Users/zhuoj/OneDrive/文档/Data_Visual/Crypoto/WWW/%s.txt.gz", book),
-                    encoding="UTF-8")
   
-  myCorpus = Corpus(VectorSource(text))
-  myCorpus = tm_map(myCorpus, content_transformer(tolower))
-  myCorpus = tm_map(myCorpus, removePunctuation)
-  myCorpus = tm_map(myCorpus, removeNumbers)
-  myCorpus = tm_map(myCorpus, removeWords,
-                    c(stopwords("SMART"), "thy", "thou", "thee", "the", "and", "but"))
+  #allComments_df <- (sprintf("./%s.txt.gz", subreddit),encoding="UTF-8")
   
-  myDTM = TermDocumentMatrix(myCorpus,
-                             control = list(minWordLength = 1))
+  allComments_df = find_thread_urls(subreddit=subreddit, sort_by="top") %>% as_tibble() %>% select(text) %>% unique()
   
-  m = as.matrix(myDTM)
+  commentCorpus <- Corpus( VectorSource( allComments_df ) )
+  #We pipe the corpus through several tm_map() methods
+  commentCorpus <- commentCorpus %>%
+    tm_map(removePunctuation) %>% ##eliminate punctuation
+    tm_map(removeNumbers) %>% #no numbers
+    tm_map(stripWhitespace) %>%#white spaces
+    tm_map(tolower)%>% ##make all words lowercase
+    tm_map(removeWords, stopwords("en")) %>%
+    tm_map(removeWords, stopwords("SMART")) %>%
+    tm_map(removeWords, c("ive","dont"))
   
-  sort(rowSums(m), decreasing = TRUE)
+  #convert the corpus to a matrix to facilitate fursther analysis
+  commentCorpus_mat <-as.matrix(TermDocumentMatrix( commentCorpus ))
+  commentCorpus_wordFreq <-sort(rowSums(commentCorpus_mat), decreasing=TRUE)
 })
 
 
@@ -120,15 +122,17 @@ body <- dashboardBody(
 
     ),
     tabItem(tabName = "Community",
+            
+            
             fluidPage(
               # Application title
-              titlePanel("Word Cloud"),
+              titlePanel("Reddit Top Comment Word Cloud"),
               
               sidebarLayout(
                 # Sidebar with a slider and selection inputs
                 sidebarPanel(
-                  selectInput("selection", "Choose a book:",
-                              choices = books),
+                  selectInput("selection", "Choose a Subreddit:",
+                              choices = subreddits),
                   actionButton("update", "Change"),
                   hr(),
                   sliderInput("freq",
